@@ -86,6 +86,9 @@ class Poltergeist.WebPage
 
   content: ->
     @native.content
+    
+  cookies: ->
+    @native.cookies
 
   source: ->
     @_source

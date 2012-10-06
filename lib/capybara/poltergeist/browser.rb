@@ -31,6 +31,10 @@ module Capybara::Poltergeist
     def body
       command 'body'
     end
+    
+    def cookies
+      command 'cookies'
+    end
 
     def source
       command 'source'

@@ -89,6 +89,10 @@ module Capybara::Poltergeist
     def body
       browser.body
     end
+    
+    def cookies
+      browser.cookies
+    end
 
     def source
       browser.source.to_s

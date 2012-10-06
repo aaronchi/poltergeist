@@ -52,6 +52,9 @@ class Poltergeist.Browser
 
   body: ->
     this.sendResponse @page.content()
+    
+  cookies: ->
+    this.sendResponse @page.cookies()
 
   source: ->
     this.sendResponse @page.source()
