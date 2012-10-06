@@ -8,6 +8,10 @@ module Capybara::Poltergeist
       @driver = TestSessions::Poltergeist.driver
     end
 
+    after do
+      @driver.reset!
+    end
+
     it_should_behave_like "driver"
     it_should_behave_like "driver with javascript support"
     it_should_behave_like "driver with frame support"
@@ -206,6 +210,10 @@ module Capybara::Poltergeist
         @driver.evaluate_script("1+1").should == 2
       end
 
+      it 'propagates a Javascript error during page load to a ruby exception' do
+        expect { @driver.visit "/poltergeist/js_error" }.to raise_error(JavascriptError)
+      end
+
       it "doesn't propagate a Javascript error to ruby if error raising disabled" do
         driver = Capybara::Poltergeist::Driver.new(nil, :js_errors => false)
         driver.execute_script "setTimeout(function() { omg }, 0)"
@@ -268,6 +276,14 @@ module Capybara::Poltergeist
       it 'should determine status code even after redirect' do
         @driver.visit('/poltergeist/redirect')
         @driver.status_code.should == 200
+      end
+    end
+
+    context 'custom user agent' do
+      it 'allows to customize the user agent' do
+        @driver.headers = { 'User-Agent' => 'foo' }
+        @driver.visit '/'
+        @driver.evaluate_script('window.navigator.userAgent').should == 'foo'
       end
     end
   end

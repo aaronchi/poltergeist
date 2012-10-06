@@ -67,6 +67,10 @@ class Poltergeist.WebPage
   onResourceRequestedNative: (request) ->
     @lastRequestId = request.id
 
+    if request.url == @redirectURL
+      @redirectURL = null
+      @requestId   = request.id
+
     @_networkTraffic[request.id] = {
       request:       request,
       responseParts: []
@@ -77,7 +81,7 @@ class Poltergeist.WebPage
 
     if @requestId == response.id
       if response.redirectURL
-        @requestId = response.id
+        @redirectURL = response.redirectURL
       else
         @_statusCode = response.status
 
@@ -120,6 +124,9 @@ class Poltergeist.WebPage
   setClipRect: (rect) ->
     @native.clipRect = rect
 
+  setUserAgent: (userAgent) ->
+    @native.settings.userAgent = userAgent
+
   dimensions: ->
     scroll   = this.scrollPosition()
     viewport = this.viewportSize()
@@ -148,6 +155,12 @@ class Poltergeist.WebPage
 
   get: (id) ->
     @nodes[id] or= new Poltergeist.Node(this, id)
+
+  # Before each mouse event we make sure that the mouse is moved to where the
+  # event will take place. This deals with e.g. :hover changes.
+  mouseEvent: (name, x, y) ->
+    this.sendEvent('mousemove', x, y)
+    this.sendEvent(name, x, y)
 
   evaluate: (fn, args...) ->
     JSON.parse @native.evaluate("function() { return PoltergeistAgent.stringify(#{this.stringifyCall(fn, args)}) }")

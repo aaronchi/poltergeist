@@ -28,6 +28,24 @@ describe Capybara::Session do
         expect { node.text }.to raise_error(Capybara::Poltergeist::ObsoleteNode)
       end
 
+      it 'raises an error if the element is not visible' do
+        @session.visit('/poltergeist/index')
+        @session.execute_script "document.querySelector('a[href=js_redirect]').style.display = 'none'"
+        expect { @session.click_link "JS redirect" }.to raise_error(Capybara::Poltergeist::ObsoleteNode)
+      end
+
+      it 'hovers an element before clicking it' do
+        @session.visit('/poltergeist/with_js')
+        @session.click_link "Hidden link"
+        @session.current_path.should == '/'
+      end
+
+      it "returns the text of a title element" do
+        @session.visit('/poltergeist/simple')
+        node = @session.find('//title')
+        node.text.should == "Test"
+      end
+
       context "when someone (*cough* prototype *cough*) messes with Array#toJSON" do
         before do
           @session.visit("/poltergeist/index")
@@ -119,6 +137,14 @@ describe Capybara::Session do
 
       it 'fires the blur event' do
         @session.find(:css, '#changes_on_blur').text.should == "Blur"
+      end
+
+      it "fires the keydown event before the value is updated" do
+        @session.find(:css, '#value_on_keydown').text.should == "Hello"
+      end
+
+      it "fires the keyup event after the value is updated" do
+        @session.find(:css, '#value_on_keyup').text.should == "Hello!"
       end
     end
 
@@ -272,6 +298,22 @@ describe Capybara::Session do
 
         @session.status_code.should == 402
       end
+    end
+
+    it 'ignores cyclic structure errors in evaluate_script' do
+      code = <<-CODE
+        (function() {
+          var a = {}
+          a.a = a
+          return a
+        })()
+      CODE
+      @session.evaluate_script(code).should == "(cyclic structure)"
+    end
+
+    it 'returns BR as a space in #text' do
+      @session.visit '/poltergeist/simple'
+      @session.find(:css, '#break').text.should == "Foo Bar"
     end
   end
 end

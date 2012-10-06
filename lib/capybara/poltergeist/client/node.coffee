@@ -1,10 +1,10 @@
 # Proxy object for forwarding method calls to the node object inside the page.
 
 class Poltergeist.Node
-  @DELEGATES = ['text', 'getAttribute', 'value', 'set', 'setAttribute', 'isObsolete',
+  @DELEGATES = ['text', 'getAttribute', 'value', 'setAttribute', 'isObsolete',
                 'removeAttribute', 'isMultiple', 'select', 'tagName', 'find',
                 'isVisible', 'position', 'trigger', 'parentId', 'clickTest',
-                'scrollIntoView', 'isDOMEqual']
+                'scrollIntoView', 'isDOMEqual', 'focusAndHighlight', 'blur']
 
   constructor: (@page, @id) ->
 
@@ -35,7 +35,8 @@ class Poltergeist.Node
     test = this.clickTest(pos.x, pos.y)
 
     if test.status == 'success'
-      @page.sendEvent('click', pos.x, pos.y)
+      @page.mouseEvent('click', pos.x, pos.y)
+      pos
     else
       throw new Poltergeist.ClickFailed(test.selector, pos)
 
@@ -45,9 +46,13 @@ class Poltergeist.Node
     position      = this.clickPosition()
     otherPosition = other.clickPosition()
 
-    @page.sendEvent('mousedown', position.x,      position.y)
-    @page.sendEvent('mousemove', otherPosition.x, otherPosition.y)
-    @page.sendEvent('mouseup',   otherPosition.x, otherPosition.y)
+    @page.mouseEvent('mousedown', position.x,      position.y)
+    @page.mouseEvent('mouseup',   otherPosition.x, otherPosition.y)
 
   isEqual: (other) ->
     @page == other.page && this.isDOMEqual(other.id)
+
+  set: (value) ->
+    this.focusAndHighlight()
+    @page.sendEvent('keypress', value.toString())
+    this.blur()

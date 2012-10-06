@@ -181,6 +181,48 @@ makes debugging easier). Running `rake autocompile` will watch the
 
 ## Changes ##
 
+### 0.8.0 (unreleased) ###
+
+#### Features ####
+
+*   Click co-ordinates are shown in the debug log. You can use this in
+    combination with `page.driver.render` to work out where clicks are
+    actually happening if you are having trouble.
+
+#### Bug fixes ####
+
+*   Prevent `TypeError: 'undefined' is not an object (evaluating
+    'rect.top')` error when clicking an element with `display: none`.
+    The click will fail, but an obsolete node error will be raised, meaning
+    that Capybara's retry mechanisms will kick in. [Issue #130]
+
+*   Mouse over the element we will click, before clicking it. This
+    enables `:hover` effects etc to trigger before the click happens,
+    which can affect the click in some cases. [Issue #120]
+
+*   Don't blow up when `evaluate_script` is called with a cyclic
+    structure.
+
+*   Fix the text method for title elements, so it doesn't return an
+    empty string.
+
+*   Fixed problem with cookies not being clearer between tests on
+    PhantomJS 1.7
+
+*   Fixed Javascript errors during page load causes TimeoutErrors.
+    [Issue #124]
+
+*   Ensure the User-Agent header can be set successfully. (Klaus Hartl)
+    [Issue #127]
+
+*   Use `el.innerText` for `Node#text`. This ensures that e.g. `<br>` is
+    returned as a space. It also simplifies the method. [Issue #139]
+
+*   Fix status code support when a response redirects to another URL.
+    This was previously tested to ensure it would return the status code
+    of the redirected URL, but the test was falsely broken and the
+    implementation was also broken.
+
 ### 0.7.0 ###
 
 #### Features ####

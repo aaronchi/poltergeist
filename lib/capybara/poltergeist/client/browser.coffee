@@ -8,7 +8,10 @@ class Poltergeist.Browser
     this.resetPage()
 
   resetPage: ->
-    @page.release() if @page?
+    if @page?
+      @page.release()
+      phantom.clearCookies()
+
     @page = new Poltergeist.WebPage(@width, @height)
 
     @page.onLoadStarted = =>
@@ -19,7 +22,7 @@ class Poltergeist.Browser
 
     @page.onLoadFinished = (status) =>
       if @state == 'loading'
-        this.sendResponse(status)
+        this.sendResponse(status: status, click: @last_click)
         @state = 'default'
 
     @page.onInitialized = =>
@@ -30,7 +33,7 @@ class Poltergeist.Browser
 
     if errors.length > 0
       @page.clearErrors()
-      throw new Poltergeist.JavascriptError(errors)
+      @owner.sendError(new Poltergeist.JavascriptError(errors))
     else
       @owner.sendResponse(response)
 
@@ -42,6 +45,10 @@ class Poltergeist.Browser
 
   visit: (url, headers) ->
     @state = 'loading'
+
+    # Workaround for https://code.google.com/p/phantomjs/issues/detail?id=745
+    @page.setUserAgent(headers['User-Agent']) if headers['User-Agent']
+
     @page.open(url, operation: "get", headers: headers)
 
   current_url: ->
@@ -122,11 +129,13 @@ class Poltergeist.Browser
     # state and wait for onLoadFinished before sending a response.
     @state = 'clicked'
 
-    node.click()
+    @last_click = node.click()
 
-    if @state != 'loading'
-      @state = 'default'
-      this.sendResponse(true)
+    setTimeout =>
+      if @state != 'loading'
+        @state = 'default'
+        this.sendResponse(@last_click)
+    , 5
 
   drag: (page_id, id, other_id) ->
     this.node(page_id, id).dragTo this.node(page_id, other_id)
